@@ -1,0 +1,78 @@
+
+    
+
+
+<html>
+	<head>
+		<script src="smoothie.js"></script>
+		<script src="parser2.js" type="text/javascript"></script>
+	  <style> body { margin:0; padding:0; overflow:hidden; } #sd { transform: rotateY(180deg); }</style>
+	</head>
+	<body>
+		<!-- <input type='range' id='sd' min='-8000' max='8000' step='100' style='position: absolute;left:10px; top:10px; width:30%'> -->
+		<script type="text/javascript">
+		var chart1, chart2, chart3, chart4;
+		// Randomly add a data point every 500ms
+		var ch1_history = new TimeSeries();
+		var ch2_history = new TimeSeries();
+		var ch3_history = new TimeSeries();
+		var ch4_history = new TimeSeries();
+		
+
+
+		function websocket() {
+		  ws = new WebSocket("wss://ie.dyndns.biz")
+		  ws.onopen = function (e) {
+			console.log("New Connection Opened")
+			var conf = {millisPerPixel: 20, grid: { fillStyle: '#333', strokeStyle: '#555', lineWidth: 1, millisPerLine: 1000, verticalSections: 4 }}
+
+        chart1 = new SmoothieChart(conf);
+        chart1.addTimeSeries(ch1_history, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 1 });
+				document.getElementById("chart1").width = window.innerWidth;
+				chart1.streamTo(document.getElementById("chart1"), 500);
+				
+
+				chart2 = new SmoothieChart(conf);
+        chart2.addTimeSeries(ch2_history, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 1 });
+				document.getElementById("chart2").width = window.innerWidth;
+				chart2.streamTo(document.getElementById("chart2"), 500);
+
+				chart3 = new SmoothieChart(conf);
+        chart3.addTimeSeries(ch3_history, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 1 });
+				document.getElementById("chart3").width = window.innerWidth;
+				chart3.streamTo(document.getElementById("chart3"), 500);
+
+				chart4 = new SmoothieChart(conf);
+				chart4.addTimeSeries(ch4_history, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 1 });
+				document.getElementById("chart4").width = window.innerWidth;
+        chart4.streamTo(document.getElementById("chart4"), 500);
+
+
+		  }
+		  ws.onmessage = function (response) {
+				parse(JSON.parse(response.data), function(data, aux) {
+					for(let i = 0; i < data.cs.length; i++) {
+						if(!isNaN(data.cs[i][0]))
+							ch1_history.append(new Date().getTime(), data.cs[i][0]);
+						if(!isNaN(data.cs[i][1]))
+							ch2_history.append(new Date().getTime(), data.cs[i][1]);
+						if(!isNaN(data.cs[i][2]))
+							ch3_history.append(new Date().getTime(), data.cs[i][2]);
+						if(!isNaN(data.cs[i][3]))
+							ch4_history.append(new Date().getTime(), data.cs[i][3]);
+			   }
+				//console.log("Channel Data", data)
+				// console.log("Accelerometer Data", aux)
+			 })
+		  }
+		  ws.onerror = ws.onclose = function () { }
+		}
+		window.onload = websocket;
+		</script>
+		<h3>Channel 1</h3><canvas id="chart1" width="1000" height="100" style='background:black'></canvas>
+		<h3>Channel 2</h3><canvas id="chart2" width="1000" height="100" style='background:black'></canvas>
+		<h3>Channel 3</h3><canvas id="chart3" width="1000" height="100" style='background:black'></canvas>
+		<h3>Channel 4</h3><canvas id="chart4" width="1000" height="100" style='background:black'></canvas>
+	</body>
+	
+	</html>
